@@ -9,6 +9,10 @@ A desktop application built with Electron + React + Vite for organizing and view
 - Google Drive sync (Docs, Sheets, Slides, PDFs, Drawings, Forms, Maps) as optional background sync
 - Automatic migration from localStorage on first run
 - Embedded web pages via native `<webview>` tags with CORS/frame-header bypass
+- Browser-style navigation (back, forward, home) for website pages
+- Quick-add button to save the current browsed URL as a new page
+- Automatic favicon fetching for website pages
+- "Restore Default" icon button on all icon pickers
 - Tab hibernation with LRU eviction and snapshot previews
 - Auto-naming for generic web embeds (pulls the page title automatically)
 - Lucidchart, Miro, Draw.io, Amazon, and PDF embed support (bot-protection bypass)
@@ -97,6 +101,15 @@ On first launch, any existing localStorage data from a previous browser-based se
 | `VITE_STRATA_DEBUG_SYNC` | Set to `true` to enable verbose sync logging |
 
 ## Changelog
+
+### v1.4.0
+
+- Added browser navigation buttons (back, forward, home, +) for website embed pages
+- Website pages now auto-fetch the site favicon as the default page icon
+- Added "Restore Default" button to notebook, tab, and page icon pickers
+- Generic webpages now display "Website" category label instead of "Google Sites"
+- Introduced `webpage` page type to distinguish generic URLs from actual Google Sites
+- New IPC handlers for webview navigation (`goBack`, `goForward`, `getCurrentUrl`, `fetchFavicon`)
 
 ### v1.3.2
 

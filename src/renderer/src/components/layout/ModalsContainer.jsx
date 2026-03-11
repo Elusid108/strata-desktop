@@ -100,6 +100,16 @@ export function ModalsContainer() {
     }
   }, []);
 
+  const getDefaultPageIcon = (pageId) => {
+    const notebook = data?.notebooks?.find(n => n.id === activeNotebookId);
+    const tab = notebook?.tabs?.find(t => t.id === activeTabId);
+    const page = tab?.pages?.find(p => p.id === pageId);
+    if (!page) return '📄';
+    if (page.type === 'webpage' || (page.type === 'site' && page.faviconUrl)) return null;
+    const defaults = { canvas: '🎨', mermaid: '</>', database: '🗄️', doc: '📄', sheet: '📊', slide: '📽️', form: '📋', drawing: '🖌️', map: '🗺️', site: '🌐', script: '📜', vid: '🎬', pdf: '📑', drive: '📁', miro: '🎯', drawio: '📐', lucidchart: '📊' };
+    return defaults[page.type] || '📄';
+  };
+
   return (
     <>
       {/* Tab Settings Menu */}
@@ -237,6 +247,12 @@ export function ModalsContainer() {
               ))}
             </div>
           </div>
+          <button
+            className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            onClick={() => updateNotebookIcon(notebookIconPicker.id, '📓')}
+          >
+            Restore Default
+          </button>
         </div>
       )}
 
@@ -268,6 +284,12 @@ export function ModalsContainer() {
               ))}
             </div>
           </div>
+          <button
+            className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            onClick={() => updateTabIcon(tabIconPicker.id, '📋')}
+          >
+            Restore Default
+          </button>
         </div>
       )}
 
@@ -299,6 +321,12 @@ export function ModalsContainer() {
               ))}
             </div>
           </div>
+          <button
+            className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            onClick={() => updatePageIcon(pageIconPicker.pageId, getDefaultPageIcon(pageIconPicker.pageId))}
+          >
+            Restore Default
+          </button>
         </div>
       )}
 

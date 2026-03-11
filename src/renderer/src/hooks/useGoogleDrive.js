@@ -254,7 +254,7 @@ export function useGoogleDrive(data, setData, showNotification) {
             // Sync pages
             for (const page of tab.pages) {
               const pageType = page.type || 'block';
-              const isGooglePage = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'map', 'site', 'script', 'drive'].includes(pageType);
+              const isGooglePage = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'map', 'site', 'webpage', 'script', 'drive'].includes(pageType);
               
               if (isGooglePage || page.embedUrl) {
                 if (!page.driveLinkFileId) {
@@ -436,7 +436,7 @@ export function useGoogleDrive(data, setData, showNotification) {
             for (const page of tab.pages) {
               const pageType = page.type || 'block';
               // Google/embed pages that link to external files (not stored as JSON)
-              const isGooglePage = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'map', 'site', 'script', 'drive'].includes(pageType);
+              const isGooglePage = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'map', 'site', 'webpage', 'script', 'drive'].includes(pageType);
               
               if (!dirtyPagesRef.current.has(page.id)) continue;
               

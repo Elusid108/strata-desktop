@@ -289,7 +289,7 @@ export function useAppActions() {
         webViewLink: rawUrl,
         ...(parsed.originalUrl && { originalUrl: parsed.originalUrl }),
         ...(parsed.type === 'pdf' && !parsed.fileId && !parsed.originalUrl && { originalUrl: rawUrl }),
-        icon: parsed.icon,
+        ...(parsed.type !== 'webpage' && { icon: parsed.icon }),
         createdAt: Date.now(),
       };
       const newData = {
@@ -304,12 +304,11 @@ export function useAppActions() {
       triggerStructureSync();
       triggerContentSync(newPage.id);
 
-      // For generic webpages, auto-fetch the real page title in the background
-      if (parsed.type === 'site' && !parsed.isGoogleService && window.electronAPI?.embed?.fetchTitle) {
+      // For generic webpages, auto-fetch the real page title and favicon in the background
+      if (parsed.type === 'webpage' && !parsed.isGoogleService) {
         const pageId = newPage.id;
         const embedUrl = parsed.embedUrl;
-        window.electronAPI.embed.fetchTitle(embedUrl).then((title) => {
-          if (!title) return;
+        const updatePageFields = (fields) => {
           setData((prev) => ({
             ...prev,
             notebooks: prev.notebooks.map((nb) =>
@@ -318,7 +317,7 @@ export function useAppActions() {
                 tabs: nb.tabs.map((tab) =>
                   tab.id !== activeTabId ? tab : {
                     ...tab,
-                    pages: tab.pages.map((p) => p.id !== pageId ? p : { ...p, name: title }),
+                    pages: tab.pages.map((p) => p.id !== pageId ? p : { ...p, ...fields }),
                   }
                 ),
               }
@@ -326,7 +325,19 @@ export function useAppActions() {
           }));
           triggerStructureSync();
           triggerContentSync(pageId);
-        }).catch(() => {});
+        };
+
+        if (window.electronAPI?.embed?.fetchTitle) {
+          window.electronAPI.embed.fetchTitle(embedUrl).then((title) => {
+            if (title) updatePageFields({ name: title });
+          }).catch(() => {});
+        }
+
+        if (window.electronAPI?.embed?.fetchFavicon) {
+          window.electronAPI.embed.fetchFavicon(embedUrl).then((faviconUrl) => {
+            if (faviconUrl) updatePageFields({ faviconUrl });
+          }).catch(() => {});
+        }
       }
 
       return true;
@@ -430,7 +441,7 @@ export function useAppActions() {
       let nextId = null;
       const driveIdsToDelete = [];
       const getPageDeleteId = (page) => {
-        const isEmbed = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'site', 'script', 'drive', 'lucidchart', 'miro', 'drawio'].includes(page.type);
+        const isEmbed = ['doc', 'sheet', 'slide', 'form', 'drawing', 'vid', 'pdf', 'site', 'webpage', 'script', 'drive', 'lucidchart', 'miro', 'drawio'].includes(page.type);
         return page.driveLinkFileId || (!isEmbed ? page.driveFileId : null);
       };
       const collectDriveIds = (item, itemType) => {

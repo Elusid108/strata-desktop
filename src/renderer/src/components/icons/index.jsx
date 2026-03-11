@@ -116,7 +116,11 @@ export const Highlighter = (props) => <IconBase {...props}><path d="m9 11-6 6v3h
 
 export const Move = (props) => <IconBase {...props}><polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/></IconBase>;
 
+export const ArrowLeft = (props) => <IconBase {...props}><line x1="19" x2="5" y1="12" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>;
+
 export const ArrowRight = (props) => <IconBase {...props}><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></IconBase>;
+
+export const Home = (props) => <IconBase {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></IconBase>;
 
 export const ToggleLeft = (props) => <IconBase {...props}><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></IconBase>;
 

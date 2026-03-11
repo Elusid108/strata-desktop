@@ -158,7 +158,15 @@ export function Sidebar() {
                   className={`flex items-center ${settings.condensedView ? 'justify-center' : 'pl-6 pr-4 gap-2'} py-1 text-sm cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700`}
                   title={settings.condensedView ? page.name : undefined}
                 >
-                  <span className={settings.condensedView ? 'text-xl' : ''}>{page.icon || '📄'}</span>
+                  <span className={settings.condensedView ? 'text-xl' : ''}>
+                    {page.icon ? (
+                      page.icon
+                    ) : page.faviconUrl ? (
+                      <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
+                    ) : (
+                      '📄'
+                    )}
+                  </span>
                   {!settings.condensedView && <span className="truncate">{page.name}</span>}
                   {!settings.condensedView && <Star size={14} className="text-yellow-400 opacity-50 ml-auto flex-shrink-0 fill-current" />}
                 </div>

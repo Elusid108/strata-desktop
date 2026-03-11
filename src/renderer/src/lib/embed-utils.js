@@ -216,11 +216,11 @@ export const parseEmbedUrl = (rawUrl) => {
   
   // Any URL that didn't match a known service is treated as a generic webpage
   return {
-    type: 'site',
+    type: 'webpage',
     fileId: null,
     embedUrl: url,
     icon: '🌐',
-    typeName: 'Webpage',
+    typeName: 'Website',
     isGoogleService: false,
     originalUrl: url,
   };
@@ -330,6 +330,7 @@ export const getTypeDisplayName = (type) => {
     miro: 'Miro Board',
     drawio: 'Draw.io Diagram',
     lucidchart: 'Lucidchart',
+    webpage: 'Website',
   };
   return names[type] || 'Embed';
 };

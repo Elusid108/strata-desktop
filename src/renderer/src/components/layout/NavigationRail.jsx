@@ -220,7 +220,13 @@ export function NavigationRail({ children }) {
                       setPageIconPicker(pageIconPicker?.pageId === page.id ? null : { pageId: page.id, top: pos.top, left: pos.left });
                     }}
                   >
-                    {page.icon || '📄'}
+                    {page.icon ? (
+                      page.icon
+                    ) : page.faviconUrl ? (
+                      <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
+                    ) : (
+                      '📄'
+                    )}
                   </span>
                   {!settings.condensedView &&
                     (activePageId === page.id && editingPageId === page.id ? (

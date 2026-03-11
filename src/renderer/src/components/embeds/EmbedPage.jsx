@@ -25,6 +25,7 @@ export function EmbedPage({
   onEditUrl,
   isStarred = false,
   isActive = false,
+  onAddPageFromUrl,
 }) {
   const contentRef = useRef(null)
   const isElectron = !!window.electronAPI?.isElectron
@@ -146,6 +147,7 @@ export function EmbedPage({
       case 'lucidchart':
         return <LucidchartEmbed page={page} />;
       case 'site':
+      case 'webpage':
       case 'script':
       case 'drive':
       default:
@@ -170,6 +172,7 @@ export function EmbedPage({
         onEditUrl={onEditUrl}
         onToggleStar={onToggleStar}
         isStarred={isStarred}
+        onAddPageFromUrl={onAddPageFromUrl}
       />
       <div ref={contentRef} className="flex-1 min-h-0 overflow-hidden relative">
         {isHibernated ? (

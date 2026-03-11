@@ -167,6 +167,21 @@ function createWindow() {
     }
     hibernatedViews.delete(pageId)
   })
+
+  ipcMain.handle('embed:goBack', async (_e, { pageId }) => {
+    const view = embedViews.get(pageId)
+    if (view?.webContents.canGoBack()) view.webContents.goBack()
+  })
+
+  ipcMain.handle('embed:goForward', async (_e, { pageId }) => {
+    const view = embedViews.get(pageId)
+    if (view?.webContents.canGoForward()) view.webContents.goForward()
+  })
+
+  ipcMain.handle('embed:getCurrentUrl', async (_e, { pageId }) => {
+    const view = embedViews.get(pageId)
+    return view ? view.webContents.getURL() : null
+  })
 }
 
 // Fetch the <title> of a URL from the main process (no CORS restrictions)
@@ -189,6 +204,15 @@ ipcMain.handle('embed:fetchTitle', async (_, { url }) => {
       .replace(/&quot;/g, '"')
       .replace(/&#39;|&apos;/g, "'")
       .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+  } catch {
+    return null
+  }
+})
+
+ipcMain.handle('embed:fetchFavicon', async (_, { url }) => {
+  try {
+    const { hostname } = new URL(url)
+    return `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`
   } catch {
     return null
   }

@@ -70,6 +70,7 @@ export function PageRenderer() {
     handleCanvasUpdate,
     handleTableUpdate,
     handleMermaidUpdate,
+    addEmbedPageFromUrl,
   } = useAppActions();
 
   const { page: activePage } = getActiveContext(data, activeNotebookId, activeTabId, activePageId);
@@ -168,6 +169,7 @@ export function PageRenderer() {
                 setShowEditEmbed(true);
               }}
               isStarred={p.starred}
+              onAddPageFromUrl={addEmbedPageFromUrl}
             />
           </div>
         );

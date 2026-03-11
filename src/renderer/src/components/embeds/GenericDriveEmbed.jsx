@@ -24,7 +24,7 @@ export function GenericDriveEmbed({ page }) {
     if (!wv) return;
 
     const handlePageTitle = (e) => {
-      if (e.title && e.title !== page.name && page.name === 'Webpage') {
+      if (e.title && e.title !== page.name && (page.name === 'Website' || page.name === 'Webpage')) {
         updateLocalName('page', page.id, e.title);
         syncRenameToDrive('page', page.id);
       }
