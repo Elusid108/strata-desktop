@@ -14,9 +14,8 @@ function createWindow() {
     title: 'Strata',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      webviewTag: false,
+      sandbox: false,
+      webviewTag: true
     }
   })
 
@@ -44,6 +43,18 @@ function createWindow() {
     shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  // Bypass CORS and Frame Restrictions for webviews
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const responseHeaders = { ...details.responseHeaders };
+    ['x-frame-options', 'X-Frame-Options', 'content-security-policy', 'Content-Security-Policy'].forEach(header => {
+      delete responseHeaders[header];
+    });
+    callback({ cancel: false, responseHeaders });
+  });
+
+  // Prevent Bot Blocks (Amazon) by mimicking standard Chrome
+  app.userAgentFallback = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
   // Notify renderer when window is resized so embed views can be repositioned
   win.on('resize', () => win.webContents.send('window:resized'))
@@ -184,21 +195,6 @@ ipcMain.handle('embed:fetchTitle', async (_, { url }) => {
 })
 
 app.whenReady().then(() => {
-  // Strip "Electron/x.x.x" from the user agent so sites that block Electron
-  // (e.g. Lucidchart) treat requests as coming from a standard Chromium browser.
-  app.userAgentFallback = app.userAgentFallback.replace(/\s*Electron\/[\d.]+/, '')
-
-  // Strip X-Frame-Options and CSP headers so any URL can be embedded
-  // without iframe restrictions (Gmail, Google Docs, etc.)
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const headers = { ...details.responseHeaders }
-    delete headers['x-frame-options']
-    delete headers['X-Frame-Options']
-    delete headers['content-security-policy']
-    delete headers['Content-Security-Policy']
-    callback({ responseHeaders: headers })
-  })
-
   createWindow()
 
   app.on('activate', () => {

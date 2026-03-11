@@ -102,24 +102,6 @@ export function StrataProvider({ children }) {
   const shouldFocusPageRef = useRef(false);
   const dragHoverTimerRef = useRef(null);
 
-  // Enforce background page limit (LRU Trim) — web only; Electron main process handles this
-  useEffect(() => {
-    if (window.electronAPI?.isElectron) return
-    if (settings.limitBackgroundPages && viewedEmbedPages.size > (settings.maxBackgroundPages || 10)) {
-      setViewedEmbedPages(prev => {
-        const arr = Array.from(prev);
-        return new Set(arr.slice(-(settings.maxBackgroundPages || 10)));
-      });
-    }
-  }, [settings.limitBackgroundPages, settings.maxBackgroundPages, viewedEmbedPages.size]);
-
-  // Sync maxBackgroundPages setting to the main process whenever it changes
-  useEffect(() => {
-    if (!window.electronAPI?.isElectron) return
-    const limit = settings.limitBackgroundPages ? (settings.maxBackgroundPages || 10) : Infinity
-    window.electronAPI.embed.setLimit(limit)
-  }, [settings.limitBackgroundPages, settings.maxBackgroundPages]);
-
   // Save last-view to disk in Electron whenever active IDs change
   useEffect(() => {
     if (!window.electronAPI?.isElectron) return

@@ -8,9 +8,10 @@ A desktop application built with Electron + React + Vite for organizing and view
 - **Local-first persistence** — data saved to `~/Documents/Strata/` as plain JSON files, readable and backupable
 - Google Drive sync (Docs, Sheets, Slides, PDFs, Drawings, Forms, Maps) as optional background sync
 - Automatic migration from localStorage on first run
-- Embedded web pages via native Electron WebContentsView (any URL)
+- Embedded web pages via native `<webview>` tags with CORS/frame-header bypass
 - Tab hibernation with LRU eviction and snapshot previews
-- Lucidchart, Miro, Draw.io, and PDF embed support
+- Auto-naming for generic web embeds (pulls the page title automatically)
+- Lucidchart, Miro, Draw.io, Amazon, and PDF embed support (bot-protection bypass)
 - Rich content blocks (text, lists, images, code, tables, Mermaid diagrams)
 - Leaflet map pages with custom markers
 - Undo/redo history
@@ -82,7 +83,7 @@ In the desktop app, all data is saved locally to `~/Documents/Strata/`:
 | File | Contents |
 |---|---|
 | `data.json` | All notebooks, tabs, pages, and blocks |
-| `settings.json` | Theme, column limits, background page settings |
+| `settings.json` | Theme and column layout preferences |
 | `last-view.json` | Last active notebook, tab, and page for session restore |
 
 On first launch, any existing localStorage data from a previous browser-based session is automatically migrated to disk. Google Drive sync remains available as an optional background sync layer.
@@ -94,3 +95,23 @@ On first launch, any existing localStorage data from a previous browser-based se
 | `VITE_GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID for Drive access |
 | `VITE_GOOGLE_API_KEY` | Google API key for Drive Picker |
 | `VITE_STRATA_DEBUG_SYNC` | Set to `true` to enable verbose sync logging |
+
+## Changelog
+
+### v1.3.1
+
+- Upgraded Electron main process: native `<webview>` tags enabled, restrictive sandbox disabled
+- CORS and frame-header bypass moved into the window lifecycle for reliable embed loading
+- Hardcoded Chrome 120 user-agent to prevent bot blocks on Lucidchart, Amazon, and similar sites
+- Replaced `<iframe>`-based `GenericDriveEmbed` with a `<webview>`-based component that auto-pulls page titles
+- Fixed `syncRenameToDrive` not being exported from `useAppActions`, resolving TypeError in rename flows
+- Removed background page limit settings (checkbox + slider) from the UI and all supporting logic
+
+### v1.3.0
+
+- Local-first file system persistence (`~/Documents/Strata/`)
+- Automatic migration from localStorage on first desktop launch
+
+### v1.2.0
+
+- Tab hibernation engine with LRU eviction and snapshot previews

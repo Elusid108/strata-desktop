@@ -49,6 +49,7 @@ export function useAppActions() {
     setTabIconPicker,
     setPageIconPicker,
     setIconSearchTerm,
+    syncRenameToDrive,
   } = useStrata();
 
   const { flushAndClearSync } = usePageContent();
@@ -857,5 +858,6 @@ export function useAppActions() {
     handleCanvasUpdate,
     handleTableUpdate,
     handleMermaidUpdate,
+    syncRenameToDrive,
   };
 }

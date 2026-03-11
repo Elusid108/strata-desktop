@@ -1,5 +1,5 @@
 // --- App Version ---
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.3.1";
 
 // --- Debug ---
 export const DEBUG_SYNC = import.meta.env.VITE_STRATA_DEBUG_SYNC === 'true';
@@ -93,8 +93,6 @@ export const DEFAULT_SETTINGS = {
   theme: 'light', // 'light', 'dark', 'system'
   maxColumns: 3,
   condensedView: false,
-  limitBackgroundPages: false,
-  maxBackgroundPages: 10,
 };
 
 // --- Default Table Schema ---
