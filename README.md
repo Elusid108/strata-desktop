@@ -102,6 +102,18 @@ On first launch, any existing localStorage data from a previous browser-based se
 
 ## Changelog
 
+### v1.4.2
+
+- Fixed favicon not displaying for webpage pages by computing favicon URL directly in the renderer instead of relying on IPC
+- Existing webpage pages now show favicons retroactively without needing to be recreated
+
+### v1.4.1
+
+- Separated "Drive & URL" into distinct "Google Drive" and "Webpage URL" page types with dedicated modals
+- Removed Miro, Lucidchart, and Draw.io from Drive service icons
+- Fixed "Restore Default" icon restoring to emoji instead of the page's favicon
+- Browser navigation buttons (Back, Forward, Home, +) now appear for all embed page types, repositioned after Star and Edit icons
+
 ### v1.4.0
 
 - Added browser navigation buttons (back, forward, home, +) for website embed pages

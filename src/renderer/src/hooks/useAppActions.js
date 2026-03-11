@@ -290,6 +290,7 @@ export function useAppActions() {
         ...(parsed.originalUrl && { originalUrl: parsed.originalUrl }),
         ...(parsed.type === 'pdf' && !parsed.fileId && !parsed.originalUrl && { originalUrl: rawUrl }),
         ...(parsed.type !== 'webpage' && { icon: parsed.icon }),
+        ...(parsed.type === 'webpage' && (() => { try { return { faviconUrl: `https://www.google.com/s2/favicons?domain=${new URL(parsed.embedUrl).hostname}&sz=128` }; } catch { return {}; } })()),
         createdAt: Date.now(),
       };
       const newData = {

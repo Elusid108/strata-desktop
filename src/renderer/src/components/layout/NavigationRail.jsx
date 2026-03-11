@@ -14,6 +14,7 @@ export function NavigationRail({ children }) {
     showPageTypeMenu,
     setShowPageTypeMenu,
     setShowDriveUrlModal,
+    setShowUrlModal,
     setEditingTabId,
     setEditingPageId,
     setActiveTabMenu,
@@ -186,7 +187,16 @@ export function NavigationRail({ children }) {
                       }}
                       className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 text-sm"
                     >
-                      <img src={DRIVE_LOGO_URL} alt="" className="w-5 h-5 object-contain" /> Drive & URL
+                      <img src={DRIVE_LOGO_URL} alt="" className="w-5 h-5 object-contain" /> Google Drive
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUrlModal(true);
+                        setShowPageTypeMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-3 text-sm"
+                    >
+                      <span className="text-lg">🌐</span> Webpage URL
                     </button>
                   </div>
                 )}
@@ -224,6 +234,8 @@ export function NavigationRail({ children }) {
                       page.icon
                     ) : page.faviconUrl ? (
                       <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
+                    ) : page.type === 'webpage' && (page.embedUrl || page.webViewLink) ? (
+                      <img src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`; } catch { return ''; } })()} alt="" className="w-4 h-4 rounded inline-block" />
                     ) : (
                       '📄'
                     )}

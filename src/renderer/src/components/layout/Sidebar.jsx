@@ -163,6 +163,8 @@ export function Sidebar() {
                       page.icon
                     ) : page.faviconUrl ? (
                       <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
+                    ) : page.type === 'webpage' && (page.embedUrl || page.webViewLink) ? (
+                      <img src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`; } catch { return ''; } })()} alt="" className="w-4 h-4 rounded inline-block" />
                     ) : (
                       '📄'
                     )}

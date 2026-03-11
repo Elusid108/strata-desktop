@@ -2,7 +2,6 @@ import { Star, Edit3, ExternalLink, ArrowLeft, ArrowRight, Home, Plus } from '..
 import { shouldShowEditToggle, getTypeDisplayName } from '../../lib/embed-utils';
 import { DRIVE_SERVICE_ICONS } from '../../lib/constants';
 
-const isWebpageType = (type) => type === 'webpage' || type === 'site';
 const isElectron = !!window.electronAPI?.isElectron;
 
 /**
@@ -18,7 +17,7 @@ export function EmbedToolbar({
   onAddPageFromUrl,
 }) {
   const showEditToggle = shouldShowEditToggle(page?.type);
-  const showNavButtons = isWebpageType(page?.type) && isElectron;
+  const showNavButtons = isElectron;
   
   const serviceIcon = DRIVE_SERVICE_ICONS.find(s => s.type === page?.type);
   const typeName = getTypeDisplayName(page?.type);
@@ -29,6 +28,9 @@ export function EmbedToolbar({
     }
     if (page?.faviconUrl) {
       return <img src={page.faviconUrl} alt={typeName} className="w-5 h-5 rounded" />;
+    }
+    if (page?.type === 'webpage' && (page?.embedUrl || page?.webViewLink)) {
+      try { return <img src={`https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`} alt={typeName} className="w-5 h-5 rounded" />; } catch {}
     }
     if (serviceIcon?.url) {
       return <img src={serviceIcon.url} alt={typeName} className="w-5 h-5" />;
@@ -59,24 +61,8 @@ export function EmbedToolbar({
 
   return (
     <div className="flex-shrink-0 px-4 py-1.5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
-      {/* Left: Nav buttons, Icon, Title, Type, Star */}
+      {/* Left: Icon, Title, Type, Star, Edit, Nav buttons */}
       <div className="flex items-center gap-2">
-        {showNavButtons && (
-          <div className="flex items-center gap-0.5 mr-1 border-r border-gray-200 dark:border-gray-600 pr-2">
-            <button onClick={handleGoBack} className={navBtnClass} title="Back">
-              <ArrowLeft size={16} />
-            </button>
-            <button onClick={handleGoForward} className={navBtnClass} title="Forward">
-              <ArrowRight size={16} />
-            </button>
-            <button onClick={handleGoHome} className={navBtnClass} title="Home">
-              <Home size={16} />
-            </button>
-            <button onClick={handleAddCurrentPage} className={navBtnClass} title="Save current page as new page">
-              <Plus size={16} />
-            </button>
-          </div>
-        )}
         {renderIcon()}
         <div className="flex flex-col">
           <h1 className="text-base font-semibold dark:text-white">{page?.name || 'Untitled'}</h1>
@@ -100,6 +86,23 @@ export function EmbedToolbar({
         >
           <Edit3 size={16} />
         </button>
+        {/* Browser nav buttons */}
+        {showNavButtons && (
+          <div className="flex items-center gap-0.5 ml-1 border-l border-gray-200 dark:border-gray-600 pl-2">
+            <button onClick={handleGoBack} className={navBtnClass} title="Back">
+              <ArrowLeft size={16} />
+            </button>
+            <button onClick={handleGoForward} className={navBtnClass} title="Forward">
+              <ArrowRight size={16} />
+            </button>
+            <button onClick={handleGoHome} className={navBtnClass} title="Home">
+              <Home size={16} />
+            </button>
+            <button onClick={handleAddCurrentPage} className={navBtnClass} title="Save current page as new page">
+              <Plus size={16} />
+            </button>
+          </div>
+        )}
       </div>
       
       {/* Right: Edit/Preview toggle, Popout */}

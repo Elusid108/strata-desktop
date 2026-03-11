@@ -66,6 +66,10 @@ export function ModalsContainer() {
     showNotification,
     driveUrlModalValue,
     setDriveUrlModalValue,
+    showUrlModal,
+    setShowUrlModal,
+    urlModalValue,
+    setUrlModalValue,
     editEmbedName,
     setEditEmbedName,
     editEmbedUrl,
@@ -105,7 +109,7 @@ export function ModalsContainer() {
     const tab = notebook?.tabs?.find(t => t.id === activeTabId);
     const page = tab?.pages?.find(p => p.id === pageId);
     if (!page) return '📄';
-    if (page.type === 'webpage' || (page.type === 'site' && page.faviconUrl)) return null;
+    if (page.faviconUrl) return null;
     const defaults = { canvas: '🎨', mermaid: '</>', database: '🗄️', doc: '📄', sheet: '📊', slide: '📽️', form: '📋', drawing: '🖌️', map: '🗺️', site: '🌐', script: '📜', vid: '🎬', pdf: '📑', drive: '📁', miro: '🎯', drawio: '📐', lucidchart: '📊' };
     return defaults[page.type] || '📄';
   };
@@ -521,7 +525,7 @@ export function ModalsContainer() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-xl flex items-center gap-3 dark:text-white">
-                <img src={DRIVE_LOGO_URL} alt="" className="w-8 h-8 object-contain" /> Add Drive & URL
+                <img src={DRIVE_LOGO_URL} alt="" className="w-8 h-8 object-contain" /> Add from Google Drive
               </h3>
               <button
                 onClick={() => { setShowDriveUrlModal(false); setDriveUrlModalValue(''); }}
@@ -572,7 +576,7 @@ export function ModalsContainer() {
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">URL</label>
               <input
                 className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                placeholder="https://gmail.com or any URL — Google Docs, Lucidchart, Miro, etc."
+                placeholder="Paste any Google Drive link..."
                 value={driveUrlModalValue}
                 onChange={(e) => setDriveUrlModalValue(e.target.value)}
                 onKeyDown={(e) => {
@@ -589,7 +593,7 @@ export function ModalsContainer() {
                 autoFocus
               />
               <p className="text-xs text-gray-400 mt-2">
-                Paste any URL — Google Docs, Sheets, Slides, Lucidchart, Miro, PDF, or any webpage.
+                Paste a link to any Google Doc, Sheet, Slide, Form, Drawing, or generic Drive file.
               </p>
             </div>
 
@@ -608,6 +612,71 @@ export function ModalsContainer() {
                   }
                 }}
                 disabled={!driveUrlModalValue}
+                className="px-5 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Page
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Webpage URL Modal */}
+      {showUrlModal && (
+        <div className="fixed inset-0 bg-black/50 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-xl flex items-center gap-3 dark:text-white">
+                <span className="text-2xl">🌐</span> Add Webpage
+              </h3>
+              <button
+                onClick={() => { setShowUrlModal(false); setUrlModalValue(''); }}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <X size={20} className="dark:text-white" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Webpage URL</label>
+              <input
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                placeholder="https://example.com"
+                value={urlModalValue}
+                onChange={(e) => setUrlModalValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && urlModalValue) {
+                    if (addEmbedPageFromUrl(urlModalValue)) {
+                      setShowUrlModal(false);
+                      setUrlModalValue('');
+                    }
+                  } else if (e.key === 'Escape') {
+                    setShowUrlModal(false);
+                    setUrlModalValue('');
+                  }
+                }}
+                autoFocus
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                Paste any standard website URL.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setShowUrlModal(false); setUrlModalValue(''); }}
+                className="px-5 py-2 font-medium text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (addEmbedPageFromUrl(urlModalValue)) {
+                    setShowUrlModal(false);
+                    setUrlModalValue('');
+                  }
+                }}
+                disabled={!urlModalValue}
                 className="px-5 py-2 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Add Page
