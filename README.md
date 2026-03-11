@@ -98,6 +98,10 @@ On first launch, any existing localStorage data from a previous browser-based se
 
 ## Changelog
 
+### v1.3.2
+
+- Fixed crash when opening or creating Webpage embed pages (safe optional chaining on context property)
+
 ### v1.3.1
 
 - Upgraded Electron main process: native `<webview>` tags enabled, restrictive sandbox disabled

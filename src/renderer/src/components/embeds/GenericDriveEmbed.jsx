@@ -5,7 +5,7 @@ import { useAppActions } from '../../hooks/useAppActions';
 export function GenericDriveEmbed({ page }) {
   const { pageContents } = useStrata();
   const { updateLocalName, syncRenameToDrive } = useAppActions();
-  const pageContent = pageContents[page.id];
+  const pageContent = pageContents?.[page.id];
   const webviewRef = useRef(null);
 
   // Fix the raw .json loading bug
