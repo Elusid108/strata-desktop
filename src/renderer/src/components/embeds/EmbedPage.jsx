@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getEmbedUrlForType } from '../../lib/embed-utils';
+import { useStrata } from '../../contexts/StrataContext';
 import { EmbedToolbar } from './EmbedToolbar';
 import { GoogleDocEmbed } from './GoogleDocEmbed';
 import { GoogleFormEmbed } from './GoogleFormEmbed';
@@ -27,6 +28,9 @@ export function EmbedPage({
 }) {
   const contentRef = useRef(null)
   const isElectron = !!window.electronAPI?.isElectron
+  const { hibernatedSnapshots } = useStrata()
+  const isHibernated = isElectron && hibernatedSnapshots.has(page?.id)
+  const snapshot = hibernatedSnapshots.get(page?.id)
 
   // View mode state (edit/preview) - persist in page data or local
   const [viewMode, setViewMode] = useState(() => {
@@ -167,10 +171,29 @@ export function EmbedPage({
         onToggleStar={onToggleStar}
         isStarred={isStarred}
       />
-      <div ref={contentRef} className="flex-1 min-h-0 overflow-hidden">
-        {/* In Electron: content is a native WebContentsView overlaid here */}
-        {/* In browser: render existing iframe-based components */}
-        {!isElectron && renderEmbed()}
+      <div ref={contentRef} className="flex-1 min-h-0 overflow-hidden relative">
+        {isHibernated ? (
+          <>
+            {snapshot && (
+              <img
+                src={snapshot}
+                className="w-full h-full object-cover object-top"
+                alt="Hibernated page snapshot"
+              />
+            )}
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30 gap-3">
+              <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl px-6 py-4 text-center shadow-lg">
+                <div className="text-2xl mb-1">💤</div>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Hibernated</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Click this page to restore</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          /* In Electron: content is a native WebContentsView overlaid here */
+          /* In browser: render existing iframe-based components */
+          !isElectron && renderEmbed()
+        )}
       </div>
     </div>
   );

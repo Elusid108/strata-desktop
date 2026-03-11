@@ -84,6 +84,7 @@ export function StrataProvider({ children }) {
 
   // Other UI
   const [viewedEmbedPages, setViewedEmbedPages] = useState(new Set());
+  const [hibernatedSnapshots, setHibernatedSnapshots] = useState(new Map()); // pageId -> dataURL
   const [dragHoverTarget, setDragHoverTarget] = useState(null);
   const [creationFlow, setCreationFlow] = useState(null);
   const [shouldFocusTitle, setShouldFocusTitle] = useState(false);
@@ -96,8 +97,9 @@ export function StrataProvider({ children }) {
   const shouldFocusPageRef = useRef(false);
   const dragHoverTimerRef = useRef(null);
 
-  // Enforce background page limit (LRU Trim)
+  // Enforce background page limit (LRU Trim) — web only; Electron main process handles this
   useEffect(() => {
+    if (window.electronAPI?.isElectron) return
     if (settings.limitBackgroundPages && viewedEmbedPages.size > (settings.maxBackgroundPages || 10)) {
       setViewedEmbedPages(prev => {
         const arr = Array.from(prev);
@@ -105,6 +107,28 @@ export function StrataProvider({ children }) {
       });
     }
   }, [settings.limitBackgroundPages, settings.maxBackgroundPages, viewedEmbedPages.size]);
+
+  // Sync maxBackgroundPages setting to the main process whenever it changes
+  useEffect(() => {
+    if (!window.electronAPI?.isElectron) return
+    const limit = settings.limitBackgroundPages ? (settings.maxBackgroundPages || 10) : Infinity
+    window.electronAPI.embed.setLimit(limit)
+  }, [settings.limitBackgroundPages, settings.maxBackgroundPages]);
+
+  // Listen for hibernation/restoration events from the main process
+  useEffect(() => {
+    if (!window.electronAPI?.isElectron) return
+    window.electronAPI.onEmbedHibernated(({ pageId, dataURL }) => {
+      setHibernatedSnapshots(prev => new Map(prev).set(pageId, dataURL))
+    })
+    window.electronAPI.onEmbedRestored(({ pageId }) => {
+      setHibernatedSnapshots(prev => {
+        const next = new Map(prev)
+        next.delete(pageId)
+        return next
+      })
+    })
+  }, []);
 
   const value = {
     // Data & persistence
@@ -215,6 +239,7 @@ export function StrataProvider({ children }) {
     // Other UI
     viewedEmbedPages,
     setViewedEmbedPages,
+    hibernatedSnapshots,
     dragHoverTarget,
     setDragHoverTarget,
     creationFlow,

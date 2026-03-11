@@ -10,6 +10,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     resize:     (pageId, bounds)      => ipcRenderer.invoke('embed:resize',     { pageId, bounds }),
     destroy:    (pageId)              => ipcRenderer.invoke('embed:destroy',    { pageId }),
     fetchTitle: (url)                 => ipcRenderer.invoke('embed:fetchTitle', { url }),
+    setLimit:   (limit)              => ipcRenderer.invoke('embed:setLimit',   { limit }),
   },
-  onWindowResized: (cb) => ipcRenderer.on('window:resized', cb),
+  onWindowResized:    (cb) => ipcRenderer.on('window:resized',    cb),
+  onEmbedHibernated:  (cb) => ipcRenderer.on('embed:hibernated',  (_e, data) => cb(data)),
+  onEmbedRestored:    (cb) => ipcRenderer.on('embed:restored',    (_e, data) => cb(data)),
 })

@@ -52,31 +52,75 @@ function createWindow() {
   }
 
   // --- WebContentsView embed management ---
-  const embedViews = new Map() // pageId -> WebContentsView
+  const embedViews = new Map()      // pageId -> WebContentsView (live)
+  const hibernatedViews = new Map() // pageId -> { url: string }
+  const lruOrder = []               // pageIds ordered oldest→newest (live views only)
+  let MAX_LIVE_VIEWS = 10
 
   ipcMain.handle('embed:show', async (_e, { pageId, url, bounds }) => {
+    // Restore from hibernation if needed
+    if (hibernatedViews.has(pageId)) {
+      hibernatedViews.delete(pageId)
+      win.webContents.send('embed:restored', { pageId })
+    }
+
+    // Get or create the live view
     let view = embedViews.get(pageId)
     if (!view) {
       view = new WebContentsView({ webPreferences: { contextIsolation: true } })
       embedViews.set(pageId, view)
       win.contentView.addChildView(view)
-    }
-    // Navigate only when the URL has changed (avoids unnecessary reloads)
-    if (view._requestedUrl !== url) {
+      view.webContents.loadURL(url)
+      view._requestedUrl = url
+    } else if (view._requestedUrl !== url) {
+      // Navigate only when the URL has changed (avoids unnecessary reloads)
       view._requestedUrl = url
       view.webContents.loadURL(url)
     }
+
+    // Re-enable full speed for the active view
+    view.webContents.setBackgroundThrottling(false)
     view.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height })
     view.setVisible(true)
+
+    // Update LRU order
+    const idx = lruOrder.indexOf(pageId)
+    if (idx !== -1) lruOrder.splice(idx, 1)
+    lruOrder.push(pageId)
+
+    // Evict oldest live view(s) if over limit
+    while (lruOrder.length > MAX_LIVE_VIEWS) {
+      const oldest = lruOrder.shift()
+      const oldView = embedViews.get(oldest)
+      if (oldView) {
+        try {
+          const img = await oldView.webContents.capturePage()
+          const dataURL = img.toDataURL()
+          win.webContents.send('embed:hibernated', { pageId: oldest, dataURL })
+        } catch (_) {
+          win.webContents.send('embed:hibernated', { pageId: oldest, dataURL: null })
+        }
+        hibernatedViews.set(oldest, { url: oldView.webContents.getURL() })
+        win.contentView.removeChildView(oldView)
+        oldView.webContents.close()
+        embedViews.delete(oldest)
+      }
+    }
   })
 
   ipcMain.handle('embed:hide', async (_e, { pageId }) => {
     const view = embedViews.get(pageId)
-    if (view) view.setVisible(false)
+    if (view) {
+      view.setVisible(false)
+      view.webContents.setBackgroundThrottling(true)
+    }
   })
 
   ipcMain.handle('embed:hideAll', async () => {
-    embedViews.forEach(v => v.setVisible(false))
+    embedViews.forEach(v => {
+      v.setVisible(false)
+      v.webContents.setBackgroundThrottling(true)
+    })
   })
 
   ipcMain.handle('embed:navigate', async (_e, { pageId, url }) => {
@@ -94,13 +138,20 @@ function createWindow() {
     }
   })
 
+  ipcMain.handle('embed:setLimit', async (_e, { limit }) => {
+    MAX_LIVE_VIEWS = Math.max(1, limit)
+  })
+
   ipcMain.handle('embed:destroy', async (_e, { pageId }) => {
     const view = embedViews.get(pageId)
     if (view) {
+      const idx = lruOrder.indexOf(pageId)
+      if (idx !== -1) lruOrder.splice(idx, 1)
       win.contentView.removeChildView(view)
       view.webContents.close()
       embedViews.delete(pageId)
     }
+    hibernatedViews.delete(pageId)
   })
 }
 
