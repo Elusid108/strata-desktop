@@ -29,7 +29,7 @@ export function EmbedPage({
 }) {
   const contentRef = useRef(null)
   const isElectron = !!window.electronAPI?.isElectron
-  const { hibernatedSnapshots } = useStrata()
+  const { hibernatedSnapshots, hasInitialLoadCompleted, isModalOverlayActive } = useStrata()
   const isHibernated = isElectron && hibernatedSnapshots.has(page?.id)
   const snapshot = hibernatedSnapshots.get(page?.id)
 
@@ -80,9 +80,10 @@ export function EmbedPage({
   }, [])
 
   // Show or hide the native WebContentsView based on whether this page is active
+  // Also hide when any modal overlay is open (native views render above all DOM content)
   useEffect(() => {
     if (!isElectron || !page?.embedUrl) return
-    if (isActive) {
+    if (isActive && hasInitialLoadCompleted && !isModalOverlayActive) {
       const bounds = getBounds()
       if (bounds && bounds.width > 0 && bounds.height > 0) {
         window.electronAPI.embed.show(page.id, page.embedUrl, bounds)
@@ -93,7 +94,7 @@ export function EmbedPage({
     return () => {
       window.electronAPI.embed.hide(page.id)
     }
-  }, [page?.id, page?.embedUrl, isElectron, getBounds, isActive])
+  }, [page?.id, page?.embedUrl, isElectron, getBounds, isActive, hasInitialLoadCompleted, isModalOverlayActive])
 
   // Resize the native view whenever the content container changes size
   useEffect(() => {
@@ -119,7 +120,7 @@ export function EmbedPage({
       }
     }
     window.electronAPI.onWindowResized(handler)
-    // ipcRenderer.on returns the renderer; no cleanup needed for safety-net listener
+    return () => window.electronAPI.offWindowResized(handler)
   }, [page?.id, isElectron, getBounds, isActive])
 
   // Render the appropriate iframe-based embed component (browser fallback)

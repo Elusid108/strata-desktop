@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { COLORS } from '../lib/constants';
+import { COLORS, DRIVE_SERVICE_ICONS } from '../lib/constants';
 import { generateId, getNextTabColor, updatePageInData } from '../lib/utils';
 import {
   createDefaultPage,
@@ -280,6 +280,10 @@ export function useAppActions() {
       const pageName = parsed.isGoogleService
         ? (parsed.type === 'site' ? 'Google Site' : `Google ${parsed.typeName}`)
         : parsed.typeName;
+      const serviceIcon = DRIVE_SERVICE_ICONS.find(s => s.type === parsed.type);
+      const faviconUrl = serviceIcon
+        ? serviceIcon.url
+        : (() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(parsed.embedUrl).hostname}&sz=128`; } catch { return undefined; } })();
       const newPage = {
         id: generateId(),
         name: pageName,
@@ -289,8 +293,7 @@ export function useAppActions() {
         webViewLink: rawUrl,
         ...(parsed.originalUrl && { originalUrl: parsed.originalUrl }),
         ...(parsed.type === 'pdf' && !parsed.fileId && !parsed.originalUrl && { originalUrl: rawUrl }),
-        ...(parsed.type !== 'webpage' && { icon: parsed.icon }),
-        ...(parsed.type === 'webpage' && (() => { try { return { faviconUrl: `https://www.google.com/s2/favicons?domain=${new URL(parsed.embedUrl).hostname}&sz=128` }; } catch { return {}; } })()),
+        ...(faviconUrl && { faviconUrl }),
         createdAt: Date.now(),
       };
       const newData = {
@@ -305,10 +308,10 @@ export function useAppActions() {
       triggerStructureSync();
       triggerContentSync(newPage.id);
 
-      // For generic webpages, auto-fetch the real page title and favicon in the background
-      if (parsed.type === 'webpage' && !parsed.isGoogleService) {
+      // Auto-fetch the real page title in the background for webpages and Google Drive files
+      if (window.electronAPI?.embed?.fetchTitle) {
         const pageId = newPage.id;
-        const embedUrl = parsed.embedUrl;
+        const fetchUrl = parsed.type === 'webpage' ? parsed.embedUrl : rawUrl;
         const updatePageFields = (fields) => {
           setData((prev) => ({
             ...prev,
@@ -327,18 +330,13 @@ export function useAppActions() {
           triggerStructureSync();
           triggerContentSync(pageId);
         };
-
-        if (window.electronAPI?.embed?.fetchTitle) {
-          window.electronAPI.embed.fetchTitle(embedUrl).then((title) => {
-            if (title) updatePageFields({ name: title });
-          }).catch(() => {});
-        }
-
-        if (window.electronAPI?.embed?.fetchFavicon) {
-          window.electronAPI.embed.fetchFavicon(embedUrl).then((faviconUrl) => {
-            if (faviconUrl) updatePageFields({ faviconUrl });
-          }).catch(() => {});
-        }
+        window.electronAPI.embed.fetchTitle(fetchUrl).then((title) => {
+          if (!title) return;
+          const cleaned = title
+            .replace(/\s*-\s*Google (Docs|Sheets|Slides|Forms|Drawings|Maps|Sites|Apps Script|Vids|Drive)\s*$/i, '')
+            .trim();
+          if (cleaned) updatePageFields({ name: cleaned });
+        }).catch(() => {});
       }
 
       return true;
@@ -349,50 +347,39 @@ export function useAppActions() {
   const addGooglePage = useCallback(
     (file) => {
       if (!activeTabId || !file) return;
-      let icon, typeName, pageType;
+      let typeName, pageType;
       const mimeType = file.mimeType || '';
       if (mimeType === 'application/vnd.google-apps.document') {
-        icon = '📄';
         typeName = 'Doc';
         pageType = 'doc';
       } else if (mimeType === 'application/vnd.google-apps.spreadsheet') {
-        icon = '📊';
         typeName = 'Sheet';
         pageType = 'sheet';
       } else if (mimeType === 'application/vnd.google-apps.presentation') {
-        icon = '📽️';
         typeName = 'Slides';
         pageType = 'slide';
       } else if (mimeType === 'application/vnd.google-apps.form') {
-        icon = '📋';
         typeName = 'Form';
         pageType = 'form';
       } else if (mimeType === 'application/vnd.google-apps.drawing') {
-        icon = '🖌️';
         typeName = 'Drawing';
         pageType = 'drawing';
       } else if (mimeType === 'application/vnd.google-apps.map') {
-        icon = '🗺️';
         typeName = 'Map';
         pageType = 'map';
       } else if (mimeType === 'application/vnd.google-apps.site') {
-        icon = '🌐';
         typeName = 'Site';
         pageType = 'site';
       } else if (mimeType === 'application/vnd.google-apps.script') {
-        icon = '📜';
         typeName = 'Apps Script';
         pageType = 'script';
       } else if (mimeType === 'application/vnd.google-apps.vid') {
-        icon = '🎬';
         typeName = 'Vid';
         pageType = 'vid';
       } else if (mimeType === 'application/pdf') {
-        icon = '📑';
         typeName = 'PDF';
         pageType = 'pdf';
       } else {
-        icon = '📁';
         typeName = 'File';
         pageType = 'drive';
       }
@@ -408,6 +395,7 @@ export function useAppActions() {
       else if (pageType === 'vid') embedUrl = `https://vids.google.com/watch/${file.id}`;
       else embedUrl = `https://drive.google.com/file/d/${file.id}/preview`;
 
+      const browseServiceIcon = DRIVE_SERVICE_ICONS.find(s => s.type === pageType);
       saveToHistory();
       const newPage = {
         id: generateId(),
@@ -417,7 +405,7 @@ export function useAppActions() {
         driveFileId: file.id,
         webViewLink: file.webViewLink || file.url,
         mimeType: file.mimeType,
-        icon,
+        ...(browseServiceIcon ? { faviconUrl: browseServiceIcon.url } : {}),
         createdAt: Date.now(),
       };
       const newData = {

@@ -109,8 +109,9 @@ export function ModalsContainer() {
     const tab = notebook?.tabs?.find(t => t.id === activeTabId);
     const page = tab?.pages?.find(p => p.id === pageId);
     if (!page) return '📄';
-    if (page.faviconUrl) return null;
-    const defaults = { canvas: '🎨', mermaid: '</>', database: '🗄️', doc: '📄', sheet: '📊', slide: '📽️', form: '📋', drawing: '🖌️', map: '🗺️', site: '🌐', script: '📜', vid: '🎬', pdf: '📑', drive: '📁', miro: '🎯', drawio: '📐', lucidchart: '📊' };
+    if (page.faviconUrl || DRIVE_SERVICE_ICONS.find(s => s.type === page.type)) return null;
+    if (page.type === 'webpage') return null;
+    const defaults = { canvas: '🎨', mermaid: '</>', database: '🗄️', miro: '🎯', drawio: '📐', lucidchart: '📊' };
     return defaults[page.type] || '📄';
   };
 

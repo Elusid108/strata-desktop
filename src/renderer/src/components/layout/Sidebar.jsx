@@ -1,4 +1,4 @@
-import { APP_VERSION } from '../../lib/constants';
+import { APP_VERSION, DRIVE_SERVICE_ICONS } from '../../lib/constants';
 import { getPickerPosition } from '../../lib/utils';
 import { Book, Plus, Settings, Star, X, GoogleG, ChevronRight, Minimize2, Maximize2 } from '../../components/icons';
 import { useStrata } from '../../contexts/StrataContext';
@@ -163,11 +163,14 @@ export function Sidebar() {
                       page.icon
                     ) : page.faviconUrl ? (
                       <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
-                    ) : page.type === 'webpage' && (page.embedUrl || page.webViewLink) ? (
-                      <img src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`; } catch { return ''; } })()} alt="" className="w-4 h-4 rounded inline-block" />
-                    ) : (
-                      '📄'
-                    )}
+                    ) : (() => {
+                      const si = DRIVE_SERVICE_ICONS.find(s => s.type === page.type);
+                      if (si) return <img src={si.url} alt="" className="w-4 h-4 rounded inline-block" />;
+                      if (page.type === 'webpage' && (page.embedUrl || page.webViewLink)) {
+                        try { return <img src={`https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`} alt="" className="w-4 h-4 rounded inline-block" />; } catch {}
+                      }
+                      return '📄';
+                    })()}
                   </span>
                   {!settings.condensedView && <span className="truncate">{page.name}</span>}
                   {!settings.condensedView && <Star size={14} className="text-yellow-400 opacity-50 ml-auto flex-shrink-0 fill-current" />}

@@ -13,7 +13,7 @@ function createWindow() {
     minHeight: 600,
     title: 'Strata',
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
       webviewTag: true
     }
@@ -147,7 +147,7 @@ function createWindow() {
 
   ipcMain.handle('embed:resize', async (_e, { pageId, bounds }) => {
     const view = embedViews.get(pageId)
-    if (view?.isVisible()) {
+    if (view) {
       view.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height })
     }
   })

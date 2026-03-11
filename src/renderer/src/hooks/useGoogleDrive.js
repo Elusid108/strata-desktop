@@ -30,7 +30,9 @@ export function useGoogleDrive(data, setData, showNotification) {
   // Content sync version for triggering content sync retries
   const [contentSyncVersion, setContentSyncVersion] = useState(0);
   
-  const [hasInitialLoadCompleted, setHasInitialLoadCompleted] = useState(false);
+  const [hasInitialLoadCompleted, setHasInitialLoadCompleted] = useState(
+    !!window.electronAPI?.isElectron
+  );
   const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState(false);
   
   // Sync lock refs

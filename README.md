@@ -102,6 +102,15 @@ On first launch, any existing localStorage data from a previous browser-based se
 
 ## Changelog
 
+### v1.4.3
+
+- Fixed "Loading Workspace" overlay stuck permanently in Electron when authenticated with Google
+- Fixed native `WebContentsView` rendering on top of the loading overlay on startup
+- Fixed webpage embeds disappearing on window resize due to stale IPC listener closures
+- Added proper cleanup for `onWindowResized` IPC listeners in PageRenderer and EmbedPage
+- Fixed modals (edit URL, icon pickers, settings, etc.) appearing behind native embed views
+- Added `isModalOverlayActive` context flag to hide native views when any modal/overlay is open
+
 ### v1.4.2
 
 - Fixed favicon not displaying for webpage pages by computing favicon URL directly in the renderer instead of relying on IPC

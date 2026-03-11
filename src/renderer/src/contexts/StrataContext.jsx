@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useFileSystem } from '../hooks/useFileSystem';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
@@ -125,6 +125,16 @@ export function StrataProvider({ children }) {
       })
     })
   }, []);
+
+  // True when any modal/overlay that could appear behind a native WebContentsView is open
+  const isModalOverlayActive = useMemo(() =>
+    !!(showSettings || showDriveUrlModal || showUrlModal || showEditEmbed || showCoverInput ||
+       showSignOutConfirm || itemToDelete || syncConflict ||
+       notebookIconPicker || tabIconPicker || pageIconPicker),
+    [showSettings, showDriveUrlModal, showUrlModal, showEditEmbed, showCoverInput,
+     showSignOutConfirm, itemToDelete, syncConflict,
+     notebookIconPicker, tabIconPicker, pageIconPicker]
+  );
 
   const value = {
     // Data & persistence
@@ -253,7 +263,8 @@ export function StrataProvider({ children }) {
     tabBarRef,
     titleInputRef,
     shouldFocusPageRef,
-    dragHoverTimerRef
+    dragHoverTimerRef,
+    isModalOverlayActive,
   };
 
   return <StrataContext.Provider value={value}>{children}</StrataContext.Provider>;

@@ -100,6 +100,7 @@ export function PageRenderer() {
       }
     }
     window.electronAPI.onWindowResized(handler)
+    return () => window.electronAPI.offWindowResized(handler)
   }, [activePage?.embedUrl])
 
   // CRITICAL FIX: Iframes reload and lose state if their parent DOM node changes sibling order.

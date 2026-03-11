@@ -1,4 +1,4 @@
-import { DRIVE_LOGO_URL } from '../../lib/constants';
+import { DRIVE_LOGO_URL, DRIVE_SERVICE_ICONS } from '../../lib/constants';
 import { getTabColorClasses, getPickerPosition, getActiveContext } from '../../lib/utils';
 import { Plus, Star, X, MoreVertical } from '../../components/icons';
 import { useStrata } from '../../contexts/StrataContext';
@@ -234,11 +234,14 @@ export function NavigationRail({ children }) {
                       page.icon
                     ) : page.faviconUrl ? (
                       <img src={page.faviconUrl} alt="" className="w-4 h-4 rounded inline-block" />
-                    ) : page.type === 'webpage' && (page.embedUrl || page.webViewLink) ? (
-                      <img src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`; } catch { return ''; } })()} alt="" className="w-4 h-4 rounded inline-block" />
-                    ) : (
-                      '📄'
-                    )}
+                    ) : (() => {
+                      const si = DRIVE_SERVICE_ICONS.find(s => s.type === page.type);
+                      if (si) return <img src={si.url} alt="" className="w-4 h-4 rounded inline-block" />;
+                      if (page.type === 'webpage' && (page.embedUrl || page.webViewLink)) {
+                        try { return <img src={`https://www.google.com/s2/favicons?domain=${new URL(page.embedUrl || page.webViewLink).hostname}&sz=128`} alt="" className="w-4 h-4 rounded inline-block" />; } catch {}
+                      }
+                      return '📄';
+                    })()}
                   </span>
                   {!settings.condensedView &&
                     (activePageId === page.id && editingPageId === page.id ? (

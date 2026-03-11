@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getDataPath:  ()    => ipcRenderer.invoke('fs:getDataPath'),
   },
   onWindowResized:    (cb) => ipcRenderer.on('window:resized',    cb),
+  offWindowResized:   (cb) => ipcRenderer.removeListener('window:resized', cb),
   onEmbedHibernated:  (cb) => ipcRenderer.on('embed:hibernated',  (_e, data) => cb(data)),
   onEmbedRestored:    (cb) => ipcRenderer.on('embed:restored',    (_e, data) => cb(data)),
 })
