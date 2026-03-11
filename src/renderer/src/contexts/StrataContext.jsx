@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useFileSystem } from '../hooks/useFileSystem';
 import { useGoogleDrive } from '../hooks/useGoogleDrive';
 import { useHistory } from '../hooks/useHistory';
 
@@ -10,7 +11,11 @@ export function StrataProvider({ children }) {
   const [notification, setNotification] = useState(null);
 
   // ==================== HOOKS ====================
-  const { settings, setSettings, data, setData, loadFromLocalStorage } = useLocalStorage(false, false);
+  const localStorageHook = useLocalStorage(false, false);
+  const fileSystemHook = useFileSystem();
+
+  const { settings, setSettings, data, setData, loadFromLocalStorage, initialLoadComplete } =
+    window.electronAPI?.isElectron ? fileSystemHook : localStorageHook;
 
   const showNotification = useCallback((message, type = 'info') => {
     setNotification({ message, type });
@@ -115,6 +120,13 @@ export function StrataProvider({ children }) {
     window.electronAPI.embed.setLimit(limit)
   }, [settings.limitBackgroundPages, settings.maxBackgroundPages]);
 
+  // Save last-view to disk in Electron whenever active IDs change
+  useEffect(() => {
+    if (!window.electronAPI?.isElectron) return
+    if (!activeNotebookId) return
+    window.electronAPI.fs.saveLastView({ activeNotebookId, activeTabId, activePageId })
+  }, [activeNotebookId, activeTabId, activePageId]);
+
   // Listen for hibernation/restoration events from the main process
   useEffect(() => {
     if (!window.electronAPI?.isElectron) return
@@ -137,6 +149,7 @@ export function StrataProvider({ children }) {
     settings,
     setSettings,
     loadFromLocalStorage,
+    initialLoadComplete,
     // Auth & sync
     isAuthenticated,
     isLoadingAuth,

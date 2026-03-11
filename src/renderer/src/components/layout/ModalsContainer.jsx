@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   COLORS,
   EMOJIS,
@@ -91,6 +92,13 @@ export function ModalsContainer() {
     addEmbedPageFromUrl,
     addGooglePage,
   } = useAppActions();
+
+  const [dataPath, setDataPath] = useState('');
+  useEffect(() => {
+    if (window.electronAPI?.isElectron) {
+      window.electronAPI.fs.getDataPath().then(setDataPath);
+    }
+  }, []);
 
   return (
     <>
@@ -474,6 +482,16 @@ export function ModalsContainer() {
               )}
               <p className="text-xs text-gray-400 mt-1">Improves performance by unmounting older embed pages (Google Drive, Miro, etc.).</p>
             </div>
+
+            {window.electronAPI?.isElectron && dataPath && (
+              <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  <span className="flex items-center gap-2"><FolderOpen size={14} /> Data Location</span>
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-mono break-all select-all">{dataPath}</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Your notebooks, settings, and last-view state are saved here as JSON files.</p>
+              </div>
+            )}
 
             <div className="border-t dark:border-gray-700 pt-4">
               <button

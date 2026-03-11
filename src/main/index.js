@@ -1,6 +1,9 @@
 import { app, BrowserWindow, WebContentsView, ipcMain, session, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
+import { registerFileStoreHandlers } from './fileStore.js'
+
+registerFileStoreHandlers()
 
 function createWindow() {
   const win = new BrowserWindow({

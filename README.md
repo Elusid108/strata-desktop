@@ -1,12 +1,15 @@
 # Strata Desktop
 
-A desktop application built with Electron + React + Vite for organizing and viewing content through an integrated notebook-style interface. Supports Google Drive integration, embedded web pages, diagrams, maps, tables, and more.
+A desktop application built with Electron + React + Vite for organizing and viewing content through an integrated notebook-style interface. Supports local-first file storage, Google Drive sync, embedded web pages, diagrams, maps, tables, and more.
 
 ## Features
 
 - Notebook and page tree navigation
-- Google Drive sync (Docs, Sheets, Slides, PDFs, Drawings, Forms, Maps)
+- **Local-first persistence** — data saved to `~/Documents/Strata/` as plain JSON files, readable and backupable
+- Google Drive sync (Docs, Sheets, Slides, PDFs, Drawings, Forms, Maps) as optional background sync
+- Automatic migration from localStorage on first run
 - Embedded web pages via native Electron WebContentsView (any URL)
+- Tab hibernation with LRU eviction and snapshot previews
 - Lucidchart, Miro, Draw.io, and PDF embed support
 - Rich content blocks (text, lists, images, code, tables, Mermaid diagrams)
 - Leaflet map pages with custom markers
@@ -71,6 +74,18 @@ A desktop application built with Electron + React + Vite for organizing and view
 - [CodeMirror](https://codemirror.net/) (code block editor)
 - [Mermaid](https://mermaid.js.org/) (diagram rendering)
 - [Leaflet](https://leafletjs.com/) (map pages)
+
+## Data Storage
+
+In the desktop app, all data is saved locally to `~/Documents/Strata/`:
+
+| File | Contents |
+|---|---|
+| `data.json` | All notebooks, tabs, pages, and blocks |
+| `settings.json` | Theme, column limits, background page settings |
+| `last-view.json` | Last active notebook, tab, and page for session restore |
+
+On first launch, any existing localStorage data from a previous browser-based session is automatically migrated to disk. Google Drive sync remains available as an optional background sync layer.
 
 ## Environment Variables
 

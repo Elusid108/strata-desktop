@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { INITIAL_DATA } from '../lib/constants';
 import { log } from '../lib/logger';
 import { useStrata } from '../contexts/StrataContext';
@@ -9,11 +9,13 @@ import { useStrata } from '../contexts/StrataContext';
  */
 export function useDataLoader() {
   const {
+    data,
     setData,
     loadFromLocalStorage,
     loadFromDrive,
     isAuthenticated,
     isLoadingAuth,
+    initialLoadComplete,
     showNotification,
     setSyncConflict,
     setActiveNotebookId,
@@ -21,21 +23,25 @@ export function useDataLoader() {
     setActivePageId,
   } = useStrata();
 
+  // Ref to access current data without adding it to the effect dependency array
+  const dataRef = useRef(data);
+  useEffect(() => { dataRef.current = data; });
+
   useEffect(() => {
     const loadData = async () => {
       if (isLoadingAuth) return;
 
-      const setActiveFromData = (loadedData) => {
+      // In Electron, wait for the file system hook to finish loading
+      if (window.electronAPI?.isElectron && !initialLoadComplete) return;
+
+      const setActiveFromData_withLastView = (loadedData, lastView) => {
         if (!loadedData?.notebooks?.length) return false;
         let tgtNb, tgtTab, tgtPg;
-        try {
-          const last = JSON.parse(localStorage.getItem('strata_last_view'));
-          if (last) {
-            tgtNb = last.activeNotebookId;
-            tgtTab = last.activeTabId;
-            tgtPg = last.activePageId;
-          }
-        } catch (e) {}
+        if (lastView) {
+          tgtNb = lastView.activeNotebookId;
+          tgtTab = lastView.activeTabId;
+          tgtPg = lastView.activePageId;
+        }
 
         const nb = loadedData.notebooks.find((n) => n.id === tgtNb) || loadedData.notebooks[0];
         setActiveNotebookId(nb.id);
@@ -46,6 +52,32 @@ export function useDataLoader() {
         return true;
       };
 
+      const setActiveFromData = (loadedData) => {
+        let lastView = null;
+        try {
+          lastView = JSON.parse(localStorage.getItem('strata_last_view'));
+        } catch (e) {}
+        return setActiveFromData_withLastView(loadedData, lastView);
+      };
+
+      // --- Electron branch: data already loaded by useFileSystem ---
+      if (window.electronAPI?.isElectron) {
+        let lastView = null;
+        try {
+          lastView = await window.electronAPI.fs.loadLastView();
+        } catch { /* ignore */ }
+
+        const currentData = dataRef.current;
+        if (currentData?.notebooks?.length > 0) {
+          setActiveFromData_withLastView(currentData, lastView);
+        } else {
+          setData(INITIAL_DATA);
+          setActiveFromData_withLastView(INITIAL_DATA, null);
+        }
+        return;
+      }
+
+      // --- Browser branch: existing logic unchanged ---
       if (isAuthenticated) {
         try {
           const driveData = await loadFromDrive();
@@ -99,6 +131,7 @@ export function useDataLoader() {
   }, [
     isAuthenticated,
     isLoadingAuth,
+    initialLoadComplete,
     setData,
     loadFromLocalStorage,
     loadFromDrive,

@@ -46,8 +46,9 @@ export function usePageContent() {
     setActivePageRows(tree);
   }, [data, activePageId, activeTabId, activeNotebookId, setActivePageRows]);
 
-  // Persist last view to localStorage
+  // Persist last view to localStorage (browser only; Electron saves via StrataContext)
   useEffect(() => {
+    if (window.electronAPI?.isElectron) return;
     if (activeNotebookId && activeTabId && activePageId) {
       localStorage.setItem('strata_last_view', JSON.stringify({ activeNotebookId, activeTabId, activePageId }));
     }

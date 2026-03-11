@@ -1,5 +1,6 @@
 // Hooks barrel export
 export { useLocalStorage } from './useLocalStorage';
+export { useFileSystem } from './useFileSystem';
 export { useGoogleDrive } from './useGoogleDrive';
 export { useHistory } from './useHistory';
 export { usePageContent } from './usePageContent';
