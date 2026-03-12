@@ -23,15 +23,19 @@ export function useDataLoader() {
     setActivePageId,
   } = useStrata();
 
-  // Ref to access current data without adding it to the effect dependency array
   const dataRef = useRef(data);
-  useEffect(() => { dataRef.current = data; });
+  useEffect(() => { dataRef.current = data; }, [data]);
+
+  // Guard: only restore active IDs once on initial load.
+  // All subsequent navigation is handled by selectNotebook/selectTab/selectPage.
+  const hasRestoredRef = useRef(false);
 
   useEffect(() => {
+    if (hasRestoredRef.current) return;
+
     const loadData = async () => {
       if (isLoadingAuth) return;
 
-      // In Electron, wait for the file system hook to finish loading
       if (window.electronAPI?.isElectron && !initialLoadComplete) return;
 
       const setActiveFromData_withLastView = (loadedData, lastView) => {
@@ -49,6 +53,7 @@ export function useDataLoader() {
         setActiveTabId(tab?.id || null);
         const page = tab?.pages.find((p) => p.id === tgtPg) || tab?.pages.find((p) => p.id === tab.activePageId) || tab?.pages[0];
         setActivePageId(page?.id || null);
+        hasRestoredRef.current = true;
         return true;
       };
 
@@ -77,7 +82,7 @@ export function useDataLoader() {
         return;
       }
 
-      // --- Browser branch: existing logic unchanged ---
+      // --- Browser branch ---
       if (isAuthenticated) {
         try {
           const driveData = await loadFromDrive();

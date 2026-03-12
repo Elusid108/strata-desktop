@@ -59,7 +59,7 @@ export function usePageContent() {
     dataRef.current = data;
     activePageRowsRef.current = activePageRows;
     activeIdsRef.current = { notebookId: activeNotebookId, tabId: activeTabId, pageId: activePageId };
-  });
+  }, [data, activePageRows, activeNotebookId, activeTabId, activePageId]);
 
   const flushActivePageToData = useCallback(
     (tree) => {
@@ -124,7 +124,7 @@ export function usePageContent() {
 
   useEffect(() => {
     updatePageContentRef.current = updatePageContent;
-  });
+  }, [updatePageContent]);
 
   const ctx = getActiveContext(data, activeNotebookId, activeTabId, activePageId);
   const pageTree =

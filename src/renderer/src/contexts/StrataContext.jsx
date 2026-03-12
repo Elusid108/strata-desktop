@@ -114,16 +114,20 @@ export function StrataProvider({ children }) {
   // Listen for hibernation/restoration events from the main process
   useEffect(() => {
     if (!window.electronAPI?.isElectron) return
-    window.electronAPI.onEmbedHibernated(({ pageId, dataURL }) => {
+    const hibernatedWrapper = window.electronAPI.onEmbedHibernated(({ pageId, dataURL }) => {
       setHibernatedSnapshots(prev => new Map(prev).set(pageId, dataURL))
     })
-    window.electronAPI.onEmbedRestored(({ pageId }) => {
+    const restoredWrapper = window.electronAPI.onEmbedRestored(({ pageId }) => {
       setHibernatedSnapshots(prev => {
         const next = new Map(prev)
         next.delete(pageId)
         return next
       })
     })
+    return () => {
+      window.electronAPI.offEmbedHibernated(hibernatedWrapper)
+      window.electronAPI.offEmbedRestored(restoredWrapper)
+    }
   }, []);
 
   // True when any modal/overlay that could appear behind a native WebContentsView is open

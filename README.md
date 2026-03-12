@@ -102,6 +102,18 @@ On first launch, any existing localStorage data from a previous browser-based se
 
 ## Changelog
 
+### v1.4.4
+
+- Fixed notebook switching snapping back to the original notebook after selection
+- Fixed webpage embed pages going blank when resizing the app window
+- Fixed useDataLoader effect re-running on every data change by adding a one-shot initialization guard
+- Stabilized loadFromLocalStorage in useFileSystem to avoid unnecessary effect re-triggers
+- Fixed stale closure in PageRenderer resize handler using ref-based approach
+- Added proper dependency arrays to ref-sync useEffects in usePageContent and useDataLoader
+- Extracted duplicated migratePageIcons into shared lib/migrate-icons module
+- Extracted duplicated theme logic into shared lib/theme utility
+- Fixed memory leak: embed hibernation/restoration IPC listeners now properly clean up on unmount
+
 ### v1.4.3
 
 - Fixed "Loading Workspace" overlay stuck permanently in Electron when authenticated with Google

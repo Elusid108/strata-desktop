@@ -27,6 +27,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onWindowResized:    (cb) => ipcRenderer.on('window:resized',    cb),
   offWindowResized:   (cb) => ipcRenderer.removeListener('window:resized', cb),
-  onEmbedHibernated:  (cb) => ipcRenderer.on('embed:hibernated',  (_e, data) => cb(data)),
-  onEmbedRestored:    (cb) => ipcRenderer.on('embed:restored',    (_e, data) => cb(data)),
+  onEmbedHibernated:  (cb) => {
+    const wrapper = (_e, data) => cb(data)
+    ipcRenderer.on('embed:hibernated', wrapper)
+    return wrapper
+  },
+  offEmbedHibernated: (wrapper) => ipcRenderer.removeListener('embed:hibernated', wrapper),
+  onEmbedRestored:    (cb) => {
+    const wrapper = (_e, data) => cb(data)
+    ipcRenderer.on('embed:restored', wrapper)
+    return wrapper
+  },
+  offEmbedRestored:   (wrapper) => ipcRenderer.removeListener('embed:restored', wrapper),
 })

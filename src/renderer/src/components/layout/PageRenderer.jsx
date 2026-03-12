@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { getPickerPosition, getActiveContext } from '../../lib/utils';
 
 const formatTimestamp = (ts) => {
@@ -89,19 +89,22 @@ export function PageRenderer() {
     }
   }, [activePage?.id, activePage?.embedUrl, setViewedEmbedPages]);
 
-  // When the Electron window is resized, hide all native embed views that are no longer
-  // active. The active EmbedPage's ResizeObserver handles re-sizing; this is a safety net
-  // that ensures inactive views don't linger on screen at stale positions.
+  // Ref keeps the latest embedUrl so the single resize handler never reads a stale closure.
+  const activeEmbedUrlRef = useRef(activePage?.embedUrl);
+  activeEmbedUrlRef.current = activePage?.embedUrl;
+
+  // When the Electron window is resized, hide all native embed views if the active page
+  // is not an embed. The active EmbedPage's ResizeObserver handles repositioning.
   useEffect(() => {
     if (!window.electronAPI?.isElectron) return
     const handler = () => {
-      if (!activePage?.embedUrl) {
+      if (!activeEmbedUrlRef.current) {
         window.electronAPI.embed.hideAll()
       }
     }
     window.electronAPI.onWindowResized(handler)
     return () => window.electronAPI.offWindowResized(handler)
-  }, [activePage?.embedUrl])
+  }, [])
 
   // CRITICAL FIX: Iframes reload and lose state if their parent DOM node changes sibling order.
   // Because our LRU moves IDs to the end of the Set, we MUST sort them
