@@ -128,6 +128,7 @@ const MermaidPageComponent = ({
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const languageMenuRef = useRef(null);
   const splitContainerRef = useRef(null);
+  const pythonGraphicsRef = useRef(null);
   const isDraggingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -187,6 +188,28 @@ const MermaidPageComponent = ({
     setIframeKey((k) => k + 1);
     setViewMode(page.viewMode || 'split');
     setSplitRatio(page.splitRatio || 50);
+  }, [page.id]);
+
+  // Clean up leaked DOM elements on page change and unmount
+  useEffect(() => {
+    const cleanup = () => {
+      // Close all matplotlib figures in Pyodide to reset internal state
+      if (window.__pyodide) {
+        try { window.__pyodide.runPython('import matplotlib.pyplot as _plt; _plt.close("all")'); } catch (_) {}
+      }
+      // Remove matplotlib figures from the graphics container
+      if (pythonGraphicsRef.current) {
+        pythonGraphicsRef.current.innerHTML = '';
+      }
+      // Remove any matplotlib figures that leaked to document.body
+      document.querySelectorAll('body > div[id^="matplotlib_"]').forEach(el => el.remove());
+      // Remove orphaned mermaid render elements (mermaid prefixes temp containers with "d")
+      document.querySelectorAll('body > [id^="dmermaid-"], body > [id^="mermaid-"]').forEach(el => el.remove());
+      // Clean up the matplotlib target reference
+      delete document.pyodideMplTarget;
+    };
+    // Run cleanup when page changes (before next effect) and on unmount
+    return cleanup;
   }, [page.id]);
 
   const handleViewModeChange = (mode) => {
@@ -427,6 +450,10 @@ const MermaidPageComponent = ({
     const uniqueId = `mermaid-${page.id}-${currentRenderId}`;
     window.mermaid.render(uniqueId, renderedCode.trim())
       .then(({ svg, bindFunctions }) => {
+        // Remove the orphan element mermaid.render() leaves in the DOM
+        const orphan = document.getElementById(uniqueId);
+        if (orphan) orphan.remove();
+
         if (currentRenderId !== renderIdRef.current) return;
         mermaidBindFunctionsRef.current = bindFunctions;
 
@@ -462,6 +489,10 @@ const MermaidPageComponent = ({
         }, 50);
       })
       .catch(() => {
+        // Remove the orphan element mermaid.render() leaves on error too
+        const orphan = document.getElementById(uniqueId);
+        if (orphan) orphan.remove();
+
         if (currentRenderId !== renderIdRef.current) return;
         setMermaidError('Invalid Mermaid syntax');
         setSvgContent('');
@@ -506,10 +537,16 @@ const MermaidPageComponent = ({
         const uniqueId = `mermaid-theme-${page.id}-${Date.now()}`;
         window.mermaid.render(uniqueId, renderedCode.trim())
           .then(({ svg, bindFunctions }) => {
+            const orphan = document.getElementById(uniqueId);
+            if (orphan) orphan.remove();
             mermaidBindFunctionsRef.current = bindFunctions;
             setSvgContent(svg);
           })
-          .catch(() => setMermaidError('Invalid Mermaid syntax'));
+          .catch(() => {
+            const orphan = document.getElementById(uniqueId);
+            if (orphan) orphan.remove();
+            setMermaidError('Invalid Mermaid syntax');
+          });
       } catch (e) {
         setMermaidError('Failed to reinitialize Mermaid');
       }
@@ -526,6 +563,18 @@ const MermaidPageComponent = ({
       return;
     }
     let cancelled = false;
+
+    // Clear previous matplotlib figures from the graphics container
+    if (pythonGraphicsRef.current) {
+      pythonGraphicsRef.current.innerHTML = '';
+    }
+
+    // Set matplotlib target SYNCHRONOUSLY before any async work,
+    // since pythonGraphicsRef is now always in the DOM
+    if (pythonGraphicsRef.current) {
+      document.pyodideMplTarget = pythonGraphicsRef.current;
+    }
+
     (async () => {
       setPythonError(null);
       setPythonLoading(true);
@@ -535,8 +584,18 @@ const MermaidPageComponent = ({
         if (cancelled) return;
         const pyodide = await ensurePyodide();
         if (cancelled) return;
+
+        // Re-set target after await in case React re-rendered
+        if (pythonGraphicsRef.current) {
+          document.pyodideMplTarget = pythonGraphicsRef.current;
+        }
+
+        // Close all matplotlib figures from previous runs to prevent accumulation
+        try { pyodide.runPython('import matplotlib.pyplot as _plt; _plt.close("all")'); } catch (_) {}
+
         setPythonLoading(false);
         setPythonRunning(true);
+
         const { output, error } = await runPythonCode(renderedCode, pyodide);
         if (cancelled) return;
         setPythonOutput(output);
@@ -755,15 +814,17 @@ const MermaidPageComponent = ({
                   <div className="text-sm text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{pythonError}</div>
                 </div>
               ) : (
-                <div className="flex-1 min-h-0 flex flex-col p-4 overflow-hidden">
-                  {pythonLoading ? (
-                    <div className="flex-1 min-h-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                <div className="flex-1 min-h-0 flex flex-col p-4 overflow-auto relative">
+                  <div ref={pythonGraphicsRef} className="w-full" />
+                  {pythonOutput && (
+                    <pre className="w-full overflow-auto p-4 text-sm font-mono whitespace-pre-wrap border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 mt-2 shrink-0">
+                      {pythonOutput}
+                    </pre>
+                  )}
+                  {pythonLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400">
                       {pythonRunning ? 'Running...' : 'Loading Pyodide...'}
                     </div>
-                  ) : (
-                    <pre className="flex-1 min-h-0 w-full overflow-auto p-4 text-sm font-mono whitespace-pre-wrap border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-                      {pythonOutput || '\u00a0'}
-                    </pre>
                   )}
                 </div>
               )

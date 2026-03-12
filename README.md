@@ -102,6 +102,13 @@ On first launch, any existing localStorage data from a previous browser-based se
 
 ## Changelog
 
+### v1.4.5
+
+- Fixed matplotlib graphics rendering outside the preview pane (at the bottom of the screen) by redirecting Pyodide's `document.pyodideMplTarget` into the preview container
+- Fixed matplotlib figures stacking and multiplying across page navigations by closing all figures (`plt.close("all")`) before each Python run and during page-change cleanup
+- Fixed mermaid render orphan DOM elements accumulating in `document.body` by removing temp elements after each `mermaid.render()` call
+- Fixed preview pane ref timing issue: matplotlib graphics container is now always mounted in the DOM instead of being conditionally hidden during loading state
+
 ### v1.4.4
 
 - Fixed notebook switching snapping back to the original notebook after selection
